@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IMPO Digital Studio
 
-## Getting Started
+Multi-project monorepo structure with independent sub-projects for website, admin panel, and backend services.
 
-First, run the development server:
+## Directory Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+IMPO-Digital-Studio/
+├── website/   # Public Next.js Website (Port 3000)
+├── admin/     # Admin Panel Next.js Web App (Port 3001)
+└── backend/   # FastAPI Backend API (Future phase)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Each directory is completely self-contained with its own `package.json`, `node_modules`, and configuration files.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Getting Started & Local Development
 
-## Learn More
+### Running the Public Website
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cd website
+npm install
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Running the Admin Panel
 
-## Deploy on Vercel
+```bash
+cd admin
+npm install
+npm run dev
+```
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Running Both Simultaneously
+
+Run each project in a separate terminal window:
+
+**Terminal 1 (Public Website):**
+```bash
+cd website && npm run dev
+```
+
+**Terminal 2 (Admin Panel):**
+```bash
+cd admin && npm run dev
+```
+
+---
+
+### Backend (FastAPI)
+
+```bash
+cd backend
+# Backend setup will be implemented in future phase
+```
