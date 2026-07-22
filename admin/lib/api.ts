@@ -169,7 +169,7 @@ export async function registerAdmin(
   });
 }
 
-export async function loginAdmin(email: string, password: str): Promise<TokenResponse> {
+export async function loginAdmin(email: string, password: string): Promise<TokenResponse> {
   const data = await apiFetch<TokenResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
