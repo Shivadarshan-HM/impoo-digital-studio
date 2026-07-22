@@ -38,6 +38,7 @@ class Settings(BaseSettings):
             "http://localhost:3001",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
+            "impoo-digital-studio.vercel.app",
         ]
         if self.PUBLIC_SITE_URL and self.PUBLIC_SITE_URL not in origins:
             origins.append(self.PUBLIC_SITE_URL)
