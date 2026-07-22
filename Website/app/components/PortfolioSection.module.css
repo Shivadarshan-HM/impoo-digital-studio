@@ -1,0 +1,127 @@
+.section {
+  background: #090909;
+  color: #F5F2EB;
+  padding: 96px 0 120px;
+  position: relative;
+  width: 100%;
+}
+
+.inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (min-width: 768px) {
+  .inner {
+    padding: 0 48px;
+  }
+}
+
+.header {
+  margin-bottom: 48px;
+}
+
+.label {
+  margin: 0 0 12px;
+  font-family: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #C8A86B;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-cormorant-garamond), 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2.8rem, 5.5vw, 5.8rem);
+  font-weight: 400;
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  color: #F5F2EB;
+}
+
+.description {
+  margin: 16px 0 0;
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #A89F92;
+  max-width: 520px;
+}
+
+/* 5-Category Editorial Grid */
+.portfolioGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .portfolioGrid {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr 1fr;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .leftCol {
+    grid-column: 1;
+    height: 100%;
+  }
+
+  .rightGrid {
+    grid-column: 2 / span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .haldiItem {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .receptionItem {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .babyShootItem {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .awardsItem {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+/* Card hover image treatment */
+:global(.portfolio-card-img) {
+  filter: grayscale(40%) brightness(0.82);
+  transform: scale(1);
+  transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1), filter 1.1s ease !important;
+}
+
+:global(.group:hover .portfolio-card-img),
+:global(.group:focus-visible .portfolio-card-img) {
+  filter: grayscale(0) brightness(0.96) !important;
+  transform: scale(1.06) !important;
+}
+
+/* Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  :global(.portfolio-card-img) {
+    transition: none !important;
+    transform: none !important;
+    filter: grayscale(0) brightness(0.96) !important;
+  }
+
+  :global(.portfolio-card-underline) {
+    transition: none !important;
+    width: 64px !important;
+  }
+}

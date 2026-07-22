@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 45 20% 95%;
+
+    --card: 240 10% 5.5%;
+    --card-foreground: 45 20% 95%;
+
+    --popover: 240 10% 5.5%;
+    --popover-foreground: 45 20% 95%;
+
+    --primary: 39 48% 60%;
+    --primary-foreground: 240 10% 3.9%;
+
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 45 20% 95%;
+
+    --muted: 240 4% 12%;
+    --muted-foreground: 35 10% 65%;
+
+    --accent: 39 48% 60%;
+    --accent-foreground: 240 10% 3.9%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 4% 14%;
+    --input: 240 4% 14%;
+    --ring: 39 48% 60%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 45 20% 95%;
+    --card: 240 10% 5.5%;
+    --card-foreground: 45 20% 95%;
+    --popover: 240 10% 5.5%;
+    --popover-foreground: 45 20% 95%;
+    --primary: 39 48% 60%;
+    --primary-foreground: 240 10% 3.9%;
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 45 20% 95%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 35 10% 65%;
+    --accent: 39 48% 60%;
+    --accent-foreground: 240 10% 3.9%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 14%;
+    --input: 240 4% 14%;
+    --ring: 39 48% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(200, 168, 107, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 168, 107, 0.4);
+}

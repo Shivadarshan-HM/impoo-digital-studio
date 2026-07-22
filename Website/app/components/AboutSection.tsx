@@ -1,0 +1,146 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import Image from "next/image";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import styles from "./AboutSection.module.css";
+
+export default function AboutSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const elementsRef = useRef<(HTMLElement | null)[]>([]);
+  const imageWrapperRef = useRef<HTMLDivElement>(null);
+
+  const addToRefs = (el: HTMLElement | null) => {
+    if (el && !elementsRef.current.includes(el)) {
+      elementsRef.current.push(el);
+    }
+  };
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    const section = sectionRef.current;
+    if (!section) return;
+
+    // Check prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefersReducedMotion) {
+      // Instant reveal for accessibility
+      gsap.set(elementsRef.current, { opacity: 1, y: 0 });
+      if (imageWrapperRef.current) {
+        gsap.set(imageWrapperRef.current, { opacity: 1, scale: 1 });
+      }
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      // Initial state: hidden + shifted down
+      gsap.set(elementsRef.current, { opacity: 0, y: 28 });
+      if (imageWrapperRef.current) {
+        gsap.set(imageWrapperRef.current, { opacity: 0, scale: 0.98 });
+      }
+
+      // Timeline trigger when 75% in viewport
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top 75%",
+          once: true,
+        },
+      });
+
+      // Animate text elements with subtle stagger
+      tl.to(elementsRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.9,
+        ease: "power3.out",
+        stagger: 0.12,
+      });
+
+      // Animate founder image reveal simultaneously
+      if (imageWrapperRef.current) {
+        tl.to(
+          imageWrapperRef.current,
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 1.1,
+            ease: "power3.out",
+          },
+          "-=0.7"
+        );
+      }
+    }, section);
+
+    return () => ctx.revert();
+  }, []);
+
+  const scrollToPortfolio = () => {
+    const portfolioEl = document.getElementById("portfolio");
+    if (portfolioEl) {
+      portfolioEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  return (
+    <section ref={sectionRef} id="about" className={styles.section}>
+      <div className={styles.container}>
+        <div className={styles.grid}>
+          {/* Left Side: Typography & Brand Narrative (45%) */}
+          <div className={styles.textWrapper}>
+            <p ref={addToRefs} className={styles.eyebrow}>
+              MEET THE ARTIST &amp; VISIONARY
+            </p>
+
+            <h2 ref={addToRefs} className={styles.heading}>
+              Ravikumar IMPOO
+            </h2>
+
+            <div ref={addToRefs} className={styles.divider} aria-hidden="true" />
+
+            <p ref={addToRefs} className={styles.paragraph}>
+              Founder and Lead Cinematographer of IMPOO Digital Studio,
+              Ravikumar brings over a decade of master craftsmanship to HD
+              Kote and Mysore. With an editorial eye rooted in warm shadows,
+              authentic emotion, and cinematic grandeur, he crafts visual
+              legacies that endure across generations.
+            </p>
+
+            <p ref={addToRefs} className={styles.paragraph}>
+              Every wedding and portrait session is treated as an original
+              masterpiece — capturing unscripted tears, sacred rituals, and the
+              quiet elegance of quiet glances without intrusive staging.
+            </p>
+
+            <div ref={addToRefs} className={styles.buttonWrapper}>
+              <button
+                type="button"
+                className={styles.portfolioButton}
+                onClick={scrollToPortfolio}
+              >
+                VIEW PORTFOLIO <span className={styles.buttonArrow}>→</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Side: Large Founder Portrait (55%) */}
+          <div ref={imageWrapperRef} className={styles.imageWrapper}>
+            <Image
+              src="/portfolio/awards-recognition/cover.jpg"
+              alt="IMPOO Digital Studio — Founder Portrait"
+              fill
+              sizes="(max-width: 500px) 80vw, (max-width: 1000px) 40vw, 45vw"
+              className={styles.portraitImage}
+              priority={false}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
