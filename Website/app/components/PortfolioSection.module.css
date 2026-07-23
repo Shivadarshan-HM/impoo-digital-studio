@@ -99,28 +99,28 @@
   }
 }
 
-/* Card hover image treatment */
-:global(.portfolio-card-img) {
+/* Card hover image treatment - scoped to local parent .portfolioGrid for CSS Modules purity */
+.portfolioGrid :global(.portfolio-card-img) {
   filter: grayscale(40%) brightness(0.82);
   transform: scale(1);
   transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1), filter 1.1s ease !important;
 }
 
-:global(.group:hover .portfolio-card-img),
-:global(.group:focus-visible .portfolio-card-img) {
+.portfolioGrid :global(.group:hover .portfolio-card-img),
+.portfolioGrid :global(.group:focus-visible .portfolio-card-img) {
   filter: grayscale(0) brightness(0.96) !important;
   transform: scale(1.06) !important;
 }
 
 /* Reduced Motion Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  :global(.portfolio-card-img) {
+  .portfolioGrid :global(.portfolio-card-img) {
     transition: none !important;
     transform: none !important;
     filter: grayscale(0) brightness(0.96) !important;
   }
 
-  :global(.portfolio-card-underline) {
+  .portfolioGrid :global(.portfolio-card-underline) {
     transition: none !important;
     width: 64px !important;
   }
