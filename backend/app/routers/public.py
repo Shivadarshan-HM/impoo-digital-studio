@@ -27,16 +27,19 @@ def get_public_categories(db: Session = Depends(get_db)):
         .all()
     )
 
+    # Optimized single-query count aggregation (prevents N+1 database queries)
+    counts = (
+        db.query(Photo.category_id, func.count(Photo.id))
+        .filter(Photo.is_published.is_(True))
+        .group_by(Photo.category_id)
+        .all()
+    )
+    counts_dict = {cat_id: count for cat_id, count in counts}
+
     results = []
     for cat in categories:
-        photo_count = (
-            db.query(func.count(Photo.id))
-            .filter(Photo.category_id == cat.id, Photo.is_published.is_(True))
-            .scalar()
-            or 0
-        )
         res = PublicCategoryResponse.model_validate(cat)
-        res.photo_count = photo_count
+        res.photo_count = counts_dict.get(cat.id, 0)
         results.append(res)
 
     return results
@@ -141,10 +144,8 @@ def submit_public_lead(
     payload: LeadCreate,
     db: Session = Depends(get_db),
 ):
-    # Lightweight Spam Honeypot Check:
-    # If the hidden honeypot field 'hp_website' is filled, silently discard spam
+    # Lightweight Spam Honeypot Check
     if payload.hp_website and payload.hp_website.strip():
-        # Return dummy LeadResponse without persisting spam to database
         return LeadResponse(
             id=0,
             name=payload.name,

@@ -90,8 +90,8 @@ export function useToast() {
   if (!context) {
     // Fallback if rendered outside provider
     return {
-      toast: (msg: Omit<ToastMessage, "id">) => {
-        console.log("Toast:", msg.title, msg.description);
+      toast: (_msg: Omit<ToastMessage, "id">) => {
+        // Fallback no-op when outside ToastProvider
       },
     };
   }

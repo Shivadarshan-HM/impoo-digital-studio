@@ -7,6 +7,7 @@ import { SidebarContent } from "@/components/admin/Sidebar";
 import { Topbar } from "@/components/admin/Topbar";
 import { Sheet } from "@/components/ui/sheet";
 import { ToastProvider } from "@/components/ui/toast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getMe, getStoredToken, removeStoredToken } from "@/lib/api";
 
 export default function AdminLayout({
@@ -82,20 +83,22 @@ export default function AdminLayout({
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
 
-          {/* Smooth Page Transitions */}
+          {/* Smooth Page Transitions & Error Boundary */}
           <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-                className="h-full"
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
+            <ErrorBoundary>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="h-full"
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </ErrorBoundary>
           </main>
         </div>
       </div>

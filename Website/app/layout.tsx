@@ -3,6 +3,7 @@ import { Inter, Cormorant, Bebas_Neue, Cormorant_Garamond, Manrope, JetBrains_Mo
 import "./globals.css";
 import "./components/GlareHover.css";
 import "./components/SpecularButton.css";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -80,7 +81,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${cormorant.variable} ${bebasNeue.variable} ${cormorantGaramond.variable} ${alexBrush.variable} ${manrope.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body suppressHydrationWarning className="min-h-full bg-[#090909] text-[#F5F2EB]">{children}</body>
+      <body suppressHydrationWarning className="min-h-full bg-[#090909] text-[#F5F2EB]">
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </body>
     </html>
   );
 }

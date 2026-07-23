@@ -57,16 +57,18 @@ def list_categories(
         .all()
     )
 
+    # Single-query count aggregation (prevents N+1 database queries)
+    counts = (
+        db.query(Photo.category_id, func.count(Photo.id))
+        .group_by(Photo.category_id)
+        .all()
+    )
+    counts_dict = {cat_id: count for cat_id, count in counts}
+
     results = []
     for cat in categories:
-        photo_count = (
-            db.query(func.count(Photo.id))
-            .filter(Photo.category_id == cat.id)
-            .scalar()
-            or 0
-        )
         res = CategoryResponse.model_validate(cat)
-        res.photo_count = photo_count
+        res.photo_count = counts_dict.get(cat.id, 0)
         results.append(res)
 
     return results
@@ -160,7 +162,6 @@ def delete_category(
             detail=f"Category with id {category_id} not found",
         )
 
-    # Best-effort Cloudinary deletion of cover image and child photo images
     if category.cover_image_url:
         delete_cloudinary_image(category.cover_image_url)
 

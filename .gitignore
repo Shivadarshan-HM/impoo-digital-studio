@@ -4,19 +4,23 @@ node_modules/
 out/
 build/
 *.tsbuildinfo
-next-env.d.ts
 
-# Sub-directory node_modules & build artifacts
+# Sub-directory build artifacts
 website/node_modules/
 website/.next/
+Website/node_modules/
+Website/.next/
 admin/node_modules/
 admin/.next/
 
-# Environment files
+# Environment files (exclude .env.example)
 .env
-.env*.local
-.env.production
+.env.local
 .env.development
+.env.production
+.env*.local
+*.env
+!*.env.example
 
 # Python / Backend
 __pycache__/
@@ -25,6 +29,8 @@ __pycache__/
 .venv/
 venv/
 ENV/
+*.db
+*.sqlite
 
 # System / IDE
 .DS_Store

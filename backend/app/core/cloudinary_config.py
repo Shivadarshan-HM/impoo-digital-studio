@@ -13,12 +13,15 @@ API_SECRET = settings.CLOUDINARY_API_SECRET.strip()
 def init_cloudinary():
     """
     Validates Cloudinary credentials and initializes the Cloudinary Python SDK.
-    Raises RuntimeError if any credential is missing or empty.
+    Logs warning in development or raises RuntimeError in production if credentials are missing.
     """
     if not CLOUD_NAME or not API_KEY or not API_SECRET:
-        raise RuntimeError(
-            "Missing Cloudinary credentials in .env — check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET"
-        )
+        msg = "Cloudinary credentials missing in environment (.env) — check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET."
+        if settings.ENVIRONMENT.lower() == "production":
+            raise RuntimeError(f"CRITICAL: {msg}")
+        else:
+            logger.warning(f"⚠️ {msg} Image upload endpoints will fail until configured.")
+            return
 
     cloudinary.config(
         cloud_name=CLOUD_NAME,
@@ -42,7 +45,6 @@ def extract_public_id_from_url(url: str) -> str | None:
         return None
     
     try:
-        # Match pattern after /upload/(v\d+/)?
         match = re.search(r"/upload/(?:v\d+/)?(.+?)(?:\.[a-zA-Z0-9]+)?$", url)
         if match:
             return match.group(1)
@@ -56,7 +58,7 @@ def delete_cloudinary_image(public_id_or_url: str) -> bool:
     Best-effort helper to delete an image asset from Cloudinary by public_id or URL.
     Does not raise exceptions on failure — logs warnings instead.
     """
-    if not public_id_or_url:
+    if not public_id_or_url or not CLOUD_NAME:
         return False
 
     public_id = public_id_or_url
