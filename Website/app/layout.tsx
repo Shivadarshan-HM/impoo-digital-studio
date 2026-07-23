@@ -55,19 +55,75 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://impodigitalstudio.com";
+
 export const metadata: Metadata = {
-  title: "IMPOO Digital Studio — Premium Photography & Cinematography",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "IMPOO Digital Studio — Luxury Wedding Photography & Cinematography in Mysore & HD Kote",
+    template: "%s | IMPOO Digital Studio",
+  },
   description:
-    "Award-winning photography and cinematography studio specializing in weddings, pre-wedding, engagement, maternity, and corporate events. Based in HD Kote, Mysore.",
+    "Award-winning wedding photography and cinematography studio in Heggadadevanakote (HD Kote), Mysore, Karnataka. Specializing in sacred wedding vows, pre-wedding stories, Haldi rituals, receptions, baby shoots, and luxury wedding albums.",
   keywords: [
-    "photography studio",
-    "cinematography",
-    "wedding photography",
-    "pre-wedding shoot",
-    "Mysore photographer",
-    "HD Kote",
+    "wedding photography Mysore",
+    "wedding photographer Heggadadevanakote",
+    "HD Kote wedding studio",
+    "Karnataka wedding cinematography",
+    "pre-wedding shoot Mysore",
+    "Haldi ceremony photography",
+    "reception photography Mysore",
+    "baby shoot Heggadadevanakote",
     "IMPOO Digital Studio",
+    "IMPO Digital Studio",
+    "Ravikumar IMPOO",
   ],
+  authors: [{ name: "Ravikumar IMPOO", url: siteUrl }],
+  creator: "IMPOO Digital Studio",
+  publisher: "IMPOO Digital Studio",
+  formatDetection: {
+    email: false,
+    address: true,
+    telephone: true,
+  },
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "IMPOO Digital Studio — Luxury Wedding Photography & Cinematography",
+    description:
+      "Award-winning wedding photography and cinematography studio based in Heggadadevanakote (HD Kote) & Mysore, Karnataka. Preserving sacred vows and emotions with timeless editorial grace.",
+    url: siteUrl,
+    siteName: "IMPOO Digital Studio",
+    locale: "en_IN",
+    type: "website",
+    images: [
+      {
+        url: "/portfolio/wedding/cover.jpg",
+        width: 1200,
+        height: 630,
+        alt: "IMPOO Digital Studio — Luxury Wedding Photography in Mysore & HD Kote",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "IMPOO Digital Studio — Luxury Wedding Photography & Cinematography",
+    description:
+      "Award-winning wedding photography and cinematography studio based in Heggadadevanakote (HD Kote) & Mysore, Karnataka.",
+    images: ["/portfolio/wedding/cover.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({

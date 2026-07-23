@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
@@ -218,7 +219,7 @@ function getLocalFallbackGallery(category: CategoryDetails) {
       src: `/portfolio/${category.folder}/${filename}`,
       width,
       height,
-      alt: `${category.title} photograph ${idx + 1} — IMPO Digital Studio`,
+      alt: `${category.title} photograph ${idx + 1} — IMPOO Digital Studio, Mysore, Karnataka`,
     };
   });
 
@@ -228,6 +229,64 @@ function getLocalFallbackGallery(category: CategoryDetails) {
     galleryImages,
   };
 }
+
+const SEO_CATEGORY_DATA: Record<
+  string,
+  { seoTitle: string; seoDesc: string; keywords: string[] }
+> = {
+  wedding: {
+    seoTitle: "Wedding Photography Portfolio | IMPOO Digital Studio — Mysore, Karnataka",
+    seoDesc:
+      "Explore our cinematic wedding photography portfolio in Mysore & Heggadadevanakote (HD Kote), Karnataka. Capturing sacred vows, candid emotions, and royal wedding celebrations.",
+    keywords: [
+      "wedding photography Mysore",
+      "HD Kote wedding photographer",
+      "Karnataka wedding photography",
+      "candid wedding photographer Mysore",
+      "luxury wedding album HD Kote",
+    ],
+  },
+  haldi: {
+    seoTitle: "Haldi Ceremony Photography Portfolio | IMPOO Digital Studio",
+    seoDesc:
+      "Vibrant Haldi ceremony photography in Mysore & Heggadadevanakote. Documenting authentic turmeric rituals, joyful laughter, and traditional pre-wedding blessings.",
+    keywords: [
+      "Haldi ceremony photography",
+      "Haldi shoot Mysore",
+      "pre-wedding rituals HD Kote",
+      "turmeric ceremony photographer",
+    ],
+  },
+  reception: {
+    seoTitle: "Reception Photography & Cinematography | IMPOO Digital Studio",
+    seoDesc:
+      "Opulent wedding reception photography and high-fashion evening portraiture in Mysore and Karnataka by IMPOO Digital Studio.",
+    keywords: [
+      "reception photography Mysore",
+      "wedding reception shoot",
+      "night wedding portraiture Karnataka",
+    ],
+  },
+  "baby-shoot": {
+    seoTitle: "Baby Shoot & Newborn Photography | IMPOO Digital Studio",
+    seoDesc:
+      "Heart-melting baby shoot and newborn photography in Heggadadevanakote & Mysore, Karnataka. Preserving delicate details and priceless family memories.",
+    keywords: [
+      "baby shoot Mysore",
+      "newborn photography HD Kote",
+      "baby photoshoot Karnataka",
+    ],
+  },
+  "awards-recognition": {
+    seoTitle: "Awards & Recognition | IMPOO Digital Studio",
+    seoDesc:
+      "Award-winning wedding photography craftsmanship and editorial recognition of IMPOO Digital Studio in Karnataka.",
+    keywords: [
+      "award winning wedding photographer Mysore",
+      "best wedding photographer HD Kote",
+    ],
+  },
+};
 
 export async function generateStaticParams() {
   return [
@@ -243,19 +302,75 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const resolvedParams = await params;
-  const categoryDef = CATEGORY_MAP[resolvedParams.slug];
+  const slug = resolvedParams.slug;
+  const categoryDef = CATEGORY_MAP[slug];
+  const seoData = SEO_CATEGORY_DATA[slug];
 
-  if (!categoryDef) {
-    return {
-      title: "Portfolio — IMPO Digital Studio",
-    };
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://impodigitalstudio.com";
+  const canonicalUrl = `${siteUrl}/portfolio/${slug}`;
+
+  let categoryTitle = categoryDef ? categoryDef.title : slug;
+  let coverImageUrl = `${siteUrl}/portfolio/${slug}/cover.jpg`;
+
+  try {
+    const apiCategory = await getCategoryBySlug(slug).catch(() => null);
+    if (apiCategory) {
+      categoryTitle = apiCategory.name;
+      if (apiCategory.cover_image_url) {
+        coverImageUrl = apiCategory.cover_image_url.startsWith("http")
+          ? apiCategory.cover_image_url
+          : `${siteUrl}${apiCategory.cover_image_url}`;
+      }
+    }
+  } catch {
+    // Fallback if backend API call fails during metadata generation
   }
 
+  const title =
+    seoData?.seoTitle ||
+    `${categoryTitle} Photography Portfolio | IMPOO Digital Studio — Mysore, Karnataka`;
+  const description =
+    seoData?.seoDesc ||
+    `Explore our ${categoryTitle} photography portfolio by IMPOO Digital Studio based in Heggadadevanakote & Mysore, Karnataka. Specializing in luxury wedding stories.`;
+
   return {
-    title: `${categoryDef.title} — IMPO Digital Studio`,
-    description: categoryDef.description,
+    title,
+    description,
+    keywords: [
+      `${categoryTitle.toLowerCase()} photography`,
+      `${categoryTitle.toLowerCase()} photography Mysore`,
+      `${categoryTitle.toLowerCase()} shoot HD Kote`,
+      "IMPOO Digital Studio portfolio",
+      "wedding photographer Karnataka",
+      ...(seoData?.keywords || []),
+    ],
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "IMPOO Digital Studio",
+      locale: "en_IN",
+      type: "article",
+      images: [
+        {
+          url: coverImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${categoryTitle} Photography Portfolio — IMPOO Digital Studio, Mysore`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [coverImageUrl],
+    },
   };
 }
 
@@ -294,7 +409,7 @@ export default async function CategoryPage({
         src: photo.image_url,
         width: 1200,
         height: 800,
-        alt: `${categoryTitle} photograph ${idx + 1} — IMPO Digital Studio`,
+        alt: `${categoryTitle} photograph ${idx + 1} — IMPOO Digital Studio, Mysore, Karnataka`,
       }));
 
       totalPhotoCount = apiCategory ? apiCategory.photo_count : apiPhotos.length;

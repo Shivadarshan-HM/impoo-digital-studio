@@ -58,7 +58,7 @@ export default function PortfolioCategoryCard({
       <div className="relative w-full h-full overflow-hidden">
         <Image
           src={coverImage}
-          alt={`${name} photography portfolio`}
+          alt={`${name} photography portfolio cover — IMPOO Digital Studio, Mysore & HD Kote`}
           fill
           priority={priority}
           sizes={

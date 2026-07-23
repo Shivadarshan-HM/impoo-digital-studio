@@ -21,7 +21,7 @@ const services: Service[] = [
     description:
       "Timeless storytelling through elegant, emotion-driven imagery crafted around real moments, refined details, and the natural rhythm of your celebration.",
     imageSrc: "/portfolio/reception/photo-37.jpeg",
-    imageAlt: "Wedding couple portrait captured during golden hour",
+    imageAlt: "Wedding couple portrait captured during golden hour in Mysore by IMPOO Digital Studio",
   },
   {
     number: "02",
@@ -29,7 +29,7 @@ const services: Service[] = [
     description:
       "Every glance, every smile, every emotion in motion, filmed with cinematic intent so your day can be felt again with depth, sound, and atmosphere.",
     imageSrc: "/portfolio/wedding/photo-12.jpeg",
-    imageAlt: "Cinematic wedding decor and ceremony framing",
+    imageAlt: "Cinematic wedding decor and sacred ceremony framing by IMPOO Digital Studio, Karnataka",
   },
   {
     number: "03",
@@ -37,7 +37,7 @@ const services: Service[] = [
     description:
       "Beautiful stories before the vows, designed to reflect your personalities in intimate frames that balance elegance, movement, and authentic connection.",
     imageSrc: "/portfolio/reception/photo-5.jpg",
-    imageAlt: "Pre-wedding couple portrait session",
+    imageAlt: "Pre-wedding couple portrait session in HD Kote by IMPOO Digital Studio",
   },
   {
     number: "04",
@@ -45,7 +45,7 @@ const services: Service[] = [
     description:
       "Designed to preserve memories for generations, each album is curated with archival quality craftsmanship, thoughtful pacing, and a timeless editorial finish.",
     imageSrc: "/portfolio/reception/photo-31.jpeg",
-    imageAlt: "Elegant wedding portrait styled for album storytelling",
+    imageAlt: "Elegant luxury wedding album portrait by IMPOO Digital Studio, Mysore",
   },
 ];
 
