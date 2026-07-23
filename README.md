@@ -17,7 +17,7 @@ impo-digital-studio/
 |---|---|---|---|
 | **Backend API** | Render | `https://impoo-digital-studio.onrender.com` | Render Dashboard -> Environment |
 | **Admin Portal** | Vercel | `https://impoo-digital-studio.vercel.app` | Vercel Dashboard -> Environment Variables |
-| **Public Website** | TBD (Vercel) | *(Pending separate deployment)* | Vercel Dashboard |
+| **Public Website** | Vercel | `https://impoo-digital-studio-c7n1-gilt.vercel.app` | Vercel Dashboard |
 
 > ℹ️ **Render Cold Start Notice**: Render's free web service tier spins down after 15 minutes of inactivity. When a request is made after an idle period, the first request may take ~30–50 seconds to complete while the backend container boots up ("cold start"). This is expected free-tier hosting behavior, not a server bug.
 

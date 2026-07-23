@@ -39,16 +39,16 @@ class Settings(BaseSettings):
     # Dynamic CORS & Domain Configurations
     # ADMIN_SITE_URL: Live Vercel Admin Panel URL
     ADMIN_SITE_URL: str = "https://impoo-digital-studio.vercel.app"
-    # PUBLIC_SITE_URL: Placeholder for future public website domain
-    PUBLIC_SITE_URL: str = "http://localhost:3000"
+    # PUBLIC_SITE_URL: Live Vercel Public Website URL
+    PUBLIC_SITE_URL: str = "https://impoo-digital-studio-c7n1-gilt.vercel.app"
     # ALLOWED_ORIGINS: Comma-separated list for any additional production domains
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://impoo-digital-studio.vercel.app"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://impoo-digital-studio.vercel.app,https://impoo-digital-studio-c7n1-gilt.vercel.app"
 
     @property
     def cors_origins(self) -> List[str]:
         """
         Dynamically calculates allowed CORS origins for FastAPI.
-        Guarantees local development ports (3000/3001) and production Vercel Admin URL are always permitted.
+        Guarantees local development ports (3000/3001) and production Vercel Admin & Website URLs are always permitted.
         """
         origins_set = {
             "http://localhost:3000",
@@ -56,6 +56,7 @@ class Settings(BaseSettings):
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
             "https://impoo-digital-studio.vercel.app",
+            "https://impoo-digital-studio-c7n1-gilt.vercel.app",
         }
 
         if self.ALLOWED_ORIGINS:
