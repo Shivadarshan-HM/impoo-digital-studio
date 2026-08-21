@@ -132,7 +132,7 @@ export default function AboutSection() {
           <div ref={imageWrapperRef} className={styles.imageWrapper}>
             <Image
               src="/portfolio/awards-recognition/cover.jpg"
-              alt="IMPOO Digital Studio — Founder Portrait"
+              alt="Ravikumar Aradhya, founder and lead cinematographer of IMPOO Digital Studio in HD Kote, Mysore"
               fill
               sizes="(max-width: 500px) 80vw, (max-width: 1000px) 40vw, 45vw"
               className={styles.portraitImage}

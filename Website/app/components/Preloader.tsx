@@ -129,7 +129,7 @@ export default function Preloader() {
       <div className={styles.content}>
         {/* Studio Logo */}
         <div ref={logoWrapperRef} className={styles.logoWrapper}>
-          <h1 className={styles.logoTitle}>IMPOO</h1>
+          <div className={styles.logoTitle} role="presentation">IMPOO</div>
           <span className={styles.logoSubtitle}>Digital Studio</span>
         </div>
 

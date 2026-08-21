@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { getPublishedCategories } from "@/lib/api";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://impoo-digital-studio-c7n1-gilt.vercel.app";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://impodigitalstudio.com";
 
 const DEFAULT_SLUGS = [
   "wedding",
@@ -24,9 +24,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn("Failed to fetch dynamic categories for sitemap, using default slugs:", err);
   }
 
+  const currentDate = new Date();
+
   const categoryRoutes: MetadataRoute.Sitemap = slugs.map((slug) => ({
     url: `${BASE_URL}/portfolio/${slug}`,
-    lastModified: new Date(),
+    lastModified: currentDate,
     changeFrequency: "weekly",
     priority: 0.8,
   }));
@@ -34,10 +36,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     {
       url: BASE_URL,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: "daily",
       priority: 1.0,
     },
     ...categoryRoutes,
   ];
 }
+

@@ -178,6 +178,23 @@ function isMarriagePhoto(filename: string): boolean {
   return /\.(jpe?g|png|webp)$/i.test(filename);
 }
 
+function getDescriptiveAltText(categorySlug: string, categoryTitle: string, index: number): string {
+  switch (categorySlug) {
+    case "wedding":
+      return `Candid wedding ceremony and sacred ritual photograph ${index + 1} in HD Kote & Mysore by IMPOO Digital Studio`;
+    case "haldi":
+      return `Traditional Haldi ceremony celebration with joyful turmeric rituals ${index + 1} — IMPOO Digital Studio, Karnataka`;
+    case "reception":
+      return `Cinematic evening wedding reception portrait and couple photography ${index + 1} in Mysore by IMPOO Digital Studio`;
+    case "baby-shoot":
+      return `Heartwarming baby photoshoot and newborn portrait ${index + 1} in HD Kote by IMPOO Digital Studio`;
+    case "awards-recognition":
+      return `Award-winning wedding photography recognition and master craftsmanship honor ${index + 1} — IMPOO Digital Studio`;
+    default:
+      return `${categoryTitle} portfolio photograph ${index + 1} — IMPOO Digital Studio, Mysore & HD Kote, Karnataka`;
+  }
+}
+
 /**
  * Server-side helper to read cover and gallery images from local filesystem as fallback
  */
@@ -219,7 +236,7 @@ function getLocalFallbackGallery(category: CategoryDetails) {
       src: `/portfolio/${category.folder}/${filename}`,
       width,
       height,
-      alt: `${category.title} photograph ${idx + 1} — IMPOO Digital Studio, Mysore, Karnataka`,
+      alt: getDescriptiveAltText(category.slug, category.title, idx),
     };
   });
 
@@ -229,6 +246,7 @@ function getLocalFallbackGallery(category: CategoryDetails) {
     galleryImages,
   };
 }
+
 
 const SEO_CATEGORY_DATA: Record<
   string,
@@ -409,7 +427,7 @@ export default async function CategoryPage({
         src: photo.image_url,
         width: 1200,
         height: 800,
-        alt: `${categoryTitle} photograph ${idx + 1} — IMPOO Digital Studio, Mysore, Karnataka`,
+        alt: getDescriptiveAltText(slug, categoryTitle, idx),
       }));
 
       totalPhotoCount = apiCategory ? apiCategory.photo_count : apiPhotos.length;
@@ -436,8 +454,83 @@ export default async function CategoryPage({
   const formattedCount =
     totalPhotoCount < 10 ? `0${totalPhotoCount}` : `${totalPhotoCount}`;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://impodigitalstudio.com";
+  const canonicalUrl = `${siteUrl}/portfolio/${slug}`;
+
+  const categoryJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": siteUrl,
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Portfolio",
+            "item": `${siteUrl}/#portfolio`,
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": categoryTitle,
+            "item": canonicalUrl,
+          },
+        ],
+      },
+      {
+        "@type": "CollectionPage",
+        "@id": `${canonicalUrl}/#webpage`,
+        "url": canonicalUrl,
+        "name": `${categoryTitle} Photography Portfolio | IMPOO Digital Studio`,
+        "description": categoryDescription,
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": `${siteUrl}/#website`,
+          "name": "IMPOO Digital Studio",
+          "url": siteUrl,
+        },
+        "about": {
+          "@type": "PhotographyBusiness",
+          "name": "IMPOO Digital Studio",
+          "telephone": "+919739747628",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "N.G Complex, Belaganahalli Road, Opposite Police Station",
+            "addressLocality": "Heggadadevanakote",
+            "addressRegion": "Karnataka",
+            "postalCode": "571114",
+            "addressCountry": "IN",
+          },
+        },
+        "mainEntity": {
+          "@type": "ImageGallery",
+          "name": `${categoryTitle} Photography Collection`,
+          "description": categoryDescription,
+          "image": galleryImages.slice(0, 12).map((img) => ({
+            "@type": "ImageObject",
+            "contentUrl": img.src.startsWith("http") ? img.src : `${siteUrl}${img.src}`,
+            "caption": img.alt,
+            "name": `${categoryTitle} Photograph — IMPOO Digital Studio`,
+          })),
+        },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-[#0E0D0A] text-[#F3EDE2]">
+      {/* Category JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(categoryJsonLd) }}
+      />
+
       {/* Fixed Header / Back Link */}
       <header className="fixed top-0 left-0 right-0 z-40 px-6 py-6 md:px-12 flex items-center justify-between pointer-events-none">
         <Link
@@ -455,13 +548,14 @@ export default async function CategoryPage({
         {coverImage && (
           <Image
             src={coverImage}
-            alt={`${categoryTitle} cover image`}
+            alt={`${categoryTitle} photography portfolio cover in Mysore & HD Kote — IMPOO Digital Studio`}
             fill
             priority
             sizes="100vw"
             className="object-cover object-center brightness-[0.88] contrast-[0.96]"
           />
         )}
+
 
         {/* Bottom Cinematic Gradient Scrim (Transparent -> ~85% Black) */}
         <div
