@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { getPublishedCategories } from "@/lib/api";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://impodigitalstudio.com";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://impoo-digital-studio-c7n1-gilt.vercel.app";
 
 const DEFAULT_SLUGS = [
   "wedding",
