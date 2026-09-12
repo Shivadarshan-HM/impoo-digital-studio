@@ -22,10 +22,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in dev, or send to monitoring service
-    if (process.env.NODE_ENV !== "production") {
-      // Internal logging safely isolated
-    }
+    console.error("ErrorBoundary caught runtime error:", error, errorInfo);
   }
 
   public render() {
@@ -57,6 +54,11 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-sm text-neutral-400 max-w-md mb-6">
             An unexpected visual or runtime error occurred while loading this section.
           </p>
+          {process.env.NODE_ENV !== "production" && this.state.error && (
+            <div className="mt-2 mb-4 p-3 bg-red-950/60 border border-red-800/60 rounded text-left text-xs font-mono text-red-200 max-w-lg overflow-auto max-h-36">
+              <p className="font-semibold">{this.state.error.name}: {this.state.error.message}</p>
+            </div>
+          )}
           <button
             onClick={() => this.setState({ hasError: false })}
             className="px-4 py-2 text-xs font-medium text-white bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-lg transition-colors"

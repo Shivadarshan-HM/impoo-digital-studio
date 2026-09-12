@@ -2,12 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-const TOTAL_FRAMES = 40;
-
-const ALL_FRAME_PATHS = Array.from({ length: TOTAL_FRAMES }, (_, i) => {
-  const num = String(i + 1).padStart(3, "0");
-  return `/frames/ezgif-frame-${num}.jpg`;
-});
+const DEFAULT_FRAME_PATHS = [
+  "/frames/hero-wedding-sunset.jpg",
+  "/frames/ezgif-frame-001.jpg",
+];
 
 export default function FrameAnimationBackground({
   fps = 24,
@@ -24,8 +22,8 @@ export default function FrameAnimationBackground({
   useEffect(() => {
     let isMounted = true;
 
-    const loadAll40Frames = async () => {
-      let framePaths = ALL_FRAME_PATHS;
+    const loadFrames = async () => {
+      let framePaths = DEFAULT_FRAME_PATHS.slice(0, 1);
       try {
         const res = await fetch("/api/frames");
         if (res.ok) {
@@ -35,44 +33,80 @@ export default function FrameAnimationBackground({
           }
         }
       } catch {
-        // Fallback to ALL_FRAME_PATHS
+        // Fallback to DEFAULT_FRAME_PATHS
       }
 
-      const loadedImgs: HTMLImageElement[] = new Array(framePaths.length);
+      // De-duplicate in case of duplicate entries
+      const uniquePaths = Array.from(new Set(framePaths));
+      const loadedImgs: HTMLImageElement[] = new Array(uniquePaths.length);
       let loadedCount = 0;
 
-      framePaths.forEach((path, idx) => {
+      uniquePaths.forEach((path, idx) => {
         const img = new Image();
         img.src = path;
         img.onload = () => {
           if (!isMounted) return;
           loadedImgs[idx] = img;
           loadedCount++;
-          if (loadedCount === framePaths.length) {
-            loadedImagesRef.current = loadedImgs;
-            setImagesLoaded(true);
+          if (loadedCount === uniquePaths.length) {
+            loadedImagesRef.current = loadedImgs.filter(
+              (img): img is HTMLImageElement =>
+                Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
+            );
+            setImagesLoaded(loadedImagesRef.current.length > 0);
           }
         };
         img.onerror = () => {
           if (!isMounted) return;
-          loadedImgs[idx] = img;
-          loadedCount++;
-          if (loadedCount === framePaths.length) {
-            loadedImagesRef.current = loadedImgs;
-            setImagesLoaded(true);
+          // If first path failed, try fallback
+          if (path !== DEFAULT_FRAME_PATHS[1]) {
+            const fallbackImg = new Image();
+            fallbackImg.src = DEFAULT_FRAME_PATHS[1];
+            fallbackImg.onload = () => {
+              if (!isMounted) return;
+              loadedImgs[idx] = fallbackImg;
+              loadedCount++;
+              if (loadedCount === uniquePaths.length) {
+                loadedImagesRef.current = loadedImgs.filter(
+                  (img): img is HTMLImageElement =>
+                    Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
+                );
+                setImagesLoaded(loadedImagesRef.current.length > 0);
+              }
+            };
+            fallbackImg.onerror = () => {
+              if (!isMounted) return;
+              loadedCount++;
+              if (loadedCount === uniquePaths.length) {
+                loadedImagesRef.current = loadedImgs.filter(
+                  (img): img is HTMLImageElement =>
+                    Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
+                );
+                setImagesLoaded(loadedImagesRef.current.length > 0);
+              }
+            };
+          } else {
+            loadedCount++;
+            if (loadedCount === uniquePaths.length) {
+              loadedImagesRef.current = loadedImgs.filter(
+                (img): img is HTMLImageElement =>
+                  Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
+              );
+              setImagesLoaded(loadedImagesRef.current.length > 0);
+            }
           }
         };
       });
     };
 
-    loadAll40Frames();
+    loadFrames();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // 24 FPS Canvas Animation Loop across all 40 frames
+  // Animation Loop (Cinematic Ken Burns for single frame, multi-frame sequence if multiple)
   useEffect(() => {
     if (!imagesLoaded || loadedImagesRef.current.length === 0) return;
 
@@ -84,16 +118,60 @@ export default function FrameAnimationBackground({
 
     const images = loadedImagesRef.current;
     const totalFrames = images.length;
-    const frameDuration = 1000 / fps; // ~41.67ms per frame for 24 FPS
+    const frameDuration = 1000 / fps;
 
     let currentFrame = 0;
     let lastFrameTime = performance.now();
+    const startTime = performance.now();
     let isTabVisible = !document.hidden;
+
+    const drawFrame = (
+      img: HTMLImageElement,
+      scale = 1.0,
+      panX = 0,
+      panY = 0
+    ) => {
+      if (!canvas || !ctx || !img || !img.complete) return;
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      if (!iw || !ih) return;
+
+      const cw = canvas.width;
+      const ch = canvas.height;
+      if (!cw || !ch) return;
+
+      // Cover scaling calculation (object-fit: cover equivalent)
+      const canvasRatio = cw / ch;
+      const imgRatio = iw / ih;
+
+      let baseW = cw;
+      let baseH = ch;
+
+      if (canvasRatio > imgRatio) {
+        baseW = cw;
+        baseH = cw / imgRatio;
+      } else {
+        baseH = ch;
+        baseW = ch * imgRatio;
+      }
+
+      const drawW = baseW * scale;
+      const drawH = baseH * scale;
+      const offsetX = (cw - drawW) / 2 + panX;
+      const offsetY = (ch - drawH) / 2 + panY;
+
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+    };
 
     const handleResize = () => {
       if (!canvas) return;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      const img = images[currentFrame] || images[0];
+      if (img) {
+        drawFrame(img);
+      }
     };
 
     handleResize();
@@ -104,50 +182,32 @@ export default function FrameAnimationBackground({
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    const drawFrame = (img: HTMLImageElement) => {
-      if (!canvas || !ctx || !img || !img.complete || img.naturalWidth === 0)
-        return;
-
-      const cw = canvas.width;
-      const ch = canvas.height;
-      const iw = img.naturalWidth || img.width;
-      const ih = img.naturalHeight || img.height;
-
-      // Cover scaling calculation (object-fit: cover equivalent)
-      const canvasRatio = cw / ch;
-      const imgRatio = iw / ih;
-
-      let drawW = cw;
-      let drawH = ch;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      if (canvasRatio > imgRatio) {
-        drawW = cw;
-        drawH = cw / imgRatio;
-        offsetY = (ch - drawH) / 2;
-      } else {
-        drawH = ch;
-        drawW = ch * imgRatio;
-        offsetX = (cw - drawW) / 2;
-      }
-
-      ctx.clearRect(0, 0, cw, ch);
-      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-    };
-
     const animateLoop = (now: number) => {
       if (isTabVisible) {
-        const delta = now - lastFrameTime;
-        if (delta >= frameDuration) {
-          const framesToAdvance = Math.floor(delta / frameDuration);
-          currentFrame = (currentFrame + framesToAdvance) % totalFrames;
-          lastFrameTime = now - (delta % frameDuration);
-        }
+        if (totalFrames > 1) {
+          // Multi-frame sequential playback
+          const delta = now - lastFrameTime;
+          if (delta >= frameDuration) {
+            const framesToAdvance = Math.floor(delta / frameDuration);
+            currentFrame = (currentFrame + framesToAdvance) % totalFrames;
+            lastFrameTime = now - (delta % frameDuration);
+          }
+          const img = images[currentFrame];
+          if (img) {
+            drawFrame(img);
+          }
+        } else {
+          // Single frame: subtle cinematic Ken Burns breathe effect
+          const elapsed = (now - startTime) * 0.001; // elapsed in seconds
+          const scale =
+            1.0 + 0.04 * (0.5 + 0.5 * Math.sin((elapsed * Math.PI * 2) / 16));
+          const panX = Math.sin((elapsed * Math.PI * 2) / 22) * 6;
+          const panY = Math.cos((elapsed * Math.PI * 2) / 22) * 3;
 
-        const img = images[currentFrame];
-        if (img) {
-          drawFrame(img);
+          const img = images[0];
+          if (img) {
+            drawFrame(img, scale, panX, panY);
+          }
         }
       }
 
@@ -176,6 +236,14 @@ export default function FrameAnimationBackground({
       <canvas
         ref={canvasRef}
         className="block w-full h-full object-cover pointer-events-none"
+      />
+      {/* Editorial Vignette & Left-Side Contrast Scrim for Pristine Text Readability */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to right, rgba(9, 9, 9, 0.72) 0%, rgba(9, 9, 9, 0.46) 42%, rgba(9, 9, 9, 0.12) 75%, rgba(9, 9, 9, 0.35) 100%), linear-gradient(to bottom, rgba(9, 9, 9, 0.55) 0%, transparent 20%, transparent 80%, rgba(9, 9, 9, 0.75) 100%)",
+        }}
       />
     </div>
   );

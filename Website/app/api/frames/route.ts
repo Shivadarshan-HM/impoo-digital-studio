@@ -37,6 +37,12 @@ export async function GET() {
       });
     }
 
+    // Prioritize active hero frame image if present
+    const heroImage = "hero-wedding-sunset.jpg";
+    if (fs.existsSync(path.join(targetDir, heroImage))) {
+      return NextResponse.json({ frames: [`/frames/${heroImage}`] });
+    }
+
     // Read all frame files from public/frames
     let frameFiles: string[] = [];
     if (fs.existsSync(targetDir)) {
