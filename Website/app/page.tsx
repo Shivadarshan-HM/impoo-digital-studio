@@ -200,7 +200,7 @@ const jsonLd = {
   sameAs: [
     "https://www.instagram.com/impoophotography",
     "https://wa.me/919739747628",
-    "https://maps.app.goo.gl/vU3DDpii8tfGSK1YA",
+    "https://maps.app.goo.gl/Hf8Cck1eZVhW9ca77",
   ],
 };
 

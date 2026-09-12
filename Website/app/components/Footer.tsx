@@ -116,7 +116,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="https://maps.app.goo.gl/vU3DDpii8tfGSK1YA" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>
+                <a href="https://maps.app.goo.gl/Hf8Cck1eZVhW9ca77" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>
                   Google Maps
                 </a>
               </li>

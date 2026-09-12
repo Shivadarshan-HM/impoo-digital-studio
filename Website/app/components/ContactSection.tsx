@@ -270,18 +270,18 @@ export default function ContactSection() {
 
             <div ref={addToRefs} className={styles.mapWrapper}>
               <iframe
-                src="https://maps.google.com/maps?q=IMPOO%20Digital%20Studio,%20N.G%20Complex,%20Belaganahalli%20Road,%20Opposite%20Police%20Station,%20Heggadadevanakote,%20Karnataka%20571114&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3901.3336775040275!2d76.3308684!3d12.0892888!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba5f380ef1f5bd7%3A0x4c7f652c817ed698!2sImpoo%20Digital%20Studio!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
                 className={styles.mapIframe}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="IMPOO Digital Studio Location"
+                title="Impoo Digital Studio Location"
               ></iframe>
             </div>
 
             <div ref={addToRefs} className={styles.directionsWrapper}>
               <a
-                href="https://maps.app.goo.gl/vU3DDpii8tfGSK1YA"
+                href="https://maps.app.goo.gl/Hf8Cck1eZVhW9ca77"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.directionsButton}
