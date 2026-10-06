@@ -10,12 +10,14 @@ export function ScrollRevealText({
   delay = 0,
   as: Component = "div",
   type = "words", // "words", "lines", "block", "crazy"
+  ...rest
 }: {
   children: string | React.ReactNode;
   className?: string;
   delay?: number;
   as?: React.ElementType;
   type?: "words" | "lines" | "block" | "crazy";
+  [key: string]: unknown;
 }) {
   const containerVariants = {
     hidden: {},
@@ -47,7 +49,7 @@ export function ScrollRevealText({
 
   if (typeof children !== "string" || type === "block") {
     return (
-      <Component className={cn("overflow-hidden", className)}>
+      <Component className={cn("overflow-hidden", className)} {...rest}>
         <motion.span
           className="inline-block w-full"
           initial={{ opacity: 0, y: 50, scale: 0.95, filter: "blur(10px)" }}
@@ -71,6 +73,7 @@ export function ScrollRevealText({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true }}
+      {...rest}
     >
       {items.map((item, index) => (
         <React.Fragment key={index}>
