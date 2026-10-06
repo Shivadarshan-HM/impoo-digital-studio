@@ -5,6 +5,8 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./AboutSection.module.css";
+import { HangingIdCard } from "@/components/lightswind/hanging-id-card";
+import { ScrollRevealText } from "@/components/animate-ui/components/ScrollRevealText";
 
 export default function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -93,29 +95,29 @@ export default function AboutSection() {
         <div className={styles.grid}>
           {/* Left Side: Typography & Brand Narrative (45%) */}
           <div className={styles.textWrapper}>
-            <p ref={addToRefs} className={styles.eyebrow}>
+            <ScrollRevealText as="p" className={styles.eyebrow}>
               MEET THE ARTIST &amp; VISIONARY
-            </p>
+            </ScrollRevealText>
 
-            <h2 ref={addToRefs} className={styles.heading}>
+            <ScrollRevealText type="crazy" as="h2" className={styles.heading}>
               Ravikumar IMPOO
-            </h2>
+            </ScrollRevealText>
 
             <div ref={addToRefs} className={styles.divider} aria-hidden="true" />
 
-            <p ref={addToRefs} className={styles.paragraph}>
+            <ScrollRevealText type="words" delay={0.2} as="p" className={styles.paragraph}>
               Founder and Lead Cinematographer of IMPOO Digital Studio,
               Ravikumar brings over a decade of master craftsmanship to HD
               Kote and Mysore. With an editorial eye rooted in warm shadows,
               authentic emotion, and cinematic grandeur, he crafts visual
               legacies that endure across generations.
-            </p>
+            </ScrollRevealText>
 
-            <p ref={addToRefs} className={styles.paragraph}>
+            <ScrollRevealText type="words" delay={0.4} as="p" className={styles.paragraph}>
               Every wedding and portrait session is treated as an original
               masterpiece — capturing unscripted tears, sacred rituals, and the
               quiet elegance of quiet glances without intrusive staging.
-            </p>
+            </ScrollRevealText>
 
             <div ref={addToRefs} className={styles.buttonWrapper}>
               <button
@@ -130,14 +132,16 @@ export default function AboutSection() {
 
           {/* Right Side: Large Founder Portrait (55%) */}
           <div ref={imageWrapperRef} className={styles.imageWrapper}>
-            <Image
-              src="/portfolio/awards-recognition/cover.jpg"
-              alt="Ravikumar Aradhya, founder and lead cinematographer of IMPOO Digital Studio in HD Kote, Mysore"
-              fill
-              sizes="(max-width: 500px) 80vw, (max-width: 1000px) 40vw, 45vw"
-              className={styles.portraitImage}
-              priority={false}
-            />
+            <div className="flex items-center justify-center w-full h-full pt-12 md:pt-0 pb-16 scale-125 md:scale-150">
+              <HangingIdCard
+                name="Ravikumar IMPOO"
+                role="Lead Cinematographer"
+                badgeId="IMPOO-2026"
+                accentColor="#C8A86B"
+                ropeLength={90}
+                imageUrl="/portfolio/awards-recognition/cover.jpg"
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./ContactSection.module.css";
 import { submitLead } from "@/lib/api";
+import { ScrollRevealText } from "@/components/animate-ui/components/ScrollRevealText";
 
 export default function ContactSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -127,19 +128,19 @@ export default function ContactSection() {
         
         {/* Top Header Section */}
         <div className={styles.header}>
-          <p ref={addToRefs} className={styles.eyebrow}>
+          <ScrollRevealText as="p" className={styles.eyebrow}>
             CONTACT
-          </p>
+          </ScrollRevealText>
 
-          <h2 ref={addToRefs} className={styles.heading}>
+          <ScrollRevealText type="crazy" as="h2" className={styles.heading}>
             Let's Create Something Beautiful Together.
-          </h2>
+          </ScrollRevealText>
           
           <div ref={addToRefs} className={styles.divider} aria-hidden="true" />
 
-          <p ref={addToRefs} className={styles.description}>
+          <ScrollRevealText type="words" delay={0.2} as="p" className={styles.description}>
             We would love to hear from you. Fill out the form below or visit our studio to discuss how we can beautifully capture your story.
-          </p>
+          </ScrollRevealText>
         </div>
 
         {/* Two-Column Main Content */}

@@ -1,58 +1,50 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import styles from "./ServicesSection.module.css";
+import ThreeDBendCarousel, { ThreeDBendCarouselRef } from "@/components/lightswind/3d-bend-carousel";
+import { StarsBackground } from "@/components/animate-ui/components/backgrounds/stars";
 
-type Service = {
-  number: string;
-  title: string;
-  description: string;
-  imageSrc: string;
-  imageAlt: string;
-};
-
-const services: Service[] = [
+const services = [
   {
-    number: "01",
+    image: "/portfolio/reception/photo-37.jpeg",
     title: "Wedding Photography",
-    description:
-      "Timeless storytelling through elegant, emotion-driven imagery crafted around real moments, refined details, and the natural rhythm of your celebration.",
-    imageSrc: "/portfolio/reception/photo-37.jpeg",
-    imageAlt: "Wedding couple portrait captured during golden hour in Mysore by IMPOO Digital Studio",
+    subtitle: "Timeless Storytelling",
+    badge: "01",
+    tag: "Photography",
+    description: "Timeless storytelling through elegant, emotion-driven imagery crafted around real moments and refined details.",
   },
   {
-    number: "02",
+    image: "/portfolio/wedding/photo-12.jpeg",
     title: "Wedding Cinematography",
-    description:
-      "Every glance, every smile, every emotion in motion, filmed with cinematic intent so your day can be felt again with depth, sound, and atmosphere.",
-    imageSrc: "/portfolio/wedding/photo-12.jpeg",
-    imageAlt: "Cinematic wedding decor and sacred ceremony framing by IMPOO Digital Studio, Karnataka",
+    subtitle: "Cinematic Intent",
+    badge: "02",
+    tag: "Video",
+    description: "Every glance, every emotion in motion, filmed with cinematic intent so your day can be felt again with depth.",
   },
   {
-    number: "03",
+    image: "/portfolio/reception/photo-5.jpg",
     title: "Pre Wedding Stories",
-    description:
-      "Beautiful stories before the vows, designed to reflect your personalities in intimate frames that balance elegance, movement, and authentic connection.",
-    imageSrc: "/portfolio/reception/photo-5.jpg",
-    imageAlt: "Pre-wedding couple portrait session in HD Kote by IMPOO Digital Studio",
+    subtitle: "Intimate Frames",
+    badge: "03",
+    tag: "Session",
+    description: "Beautiful stories before the vows, reflecting your personalities in frames that balance elegance and connection.",
   },
   {
-    number: "04",
+    image: "/portfolio/reception/photo-31.jpeg",
     title: "Luxury Wedding Albums",
-    description:
-      "Designed to preserve memories for generations, each album is curated with archival quality craftsmanship, thoughtful pacing, and a timeless editorial finish.",
-    imageSrc: "/portfolio/reception/photo-31.jpeg",
-    imageAlt: "Elegant luxury wedding album portrait by IMPOO Digital Studio, Mysore",
+    subtitle: "Archival Quality",
+    badge: "04",
+    tag: "Print",
+    description: "Designed to preserve memories for generations, curated with craftsmanship and a timeless editorial finish.",
   },
 ];
 
 export default function ServicesSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const blockRefs = useRef<Array<HTMLElement | null>>([]);
+  const carouselRef = useRef<ThreeDBendCarouselRef>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -60,125 +52,21 @@ export default function ServicesSection() {
 
     gsap.registerPlugin(ScrollTrigger);
 
-    const blocks = blockRefs.current.filter(Boolean);
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (prefersReducedMotion) {
-      return;
-    }
+    if (prefersReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      if (headerRef.current) {
-        const headerEls = headerRef.current.querySelectorAll("[data-services-reveal]");
-
-        gsap.fromTo(
-          headerEls,
-          { opacity: 0, y: 24 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.9,
-            ease: "power3.out",
-            stagger: 0.1,
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: "top 82%",
-              once: true,
-            },
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: `+=${(services.length - 1) * 100}%`,
+        pin: true,
+        scrub: true,
+        onUpdate: (self) => {
+          if (carouselRef.current) {
+            carouselRef.current.setProgress(self.progress);
           }
-        );
-
-        gsap.to(headerRef.current, {
-          yPercent: -4,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 1.2,
-          },
-        });
-      }
-
-      blocks.forEach((block) => {
-        if (!block) return;
-
-          const copy = block.querySelector<HTMLElement>("[data-service-copy]");
-          const number = block.querySelector<HTMLElement>("[data-service-number]");
-          const title = block.querySelector<HTMLElement>("[data-service-title]");
-          const text = block.querySelector<HTMLElement>("[data-service-text]");
-          const media = block.querySelector<HTMLElement>("[data-service-media]");
-          const image = block.querySelector<HTMLElement>("[data-service-image]");
-
-          const blockTimeline = gsap.timeline({
-            scrollTrigger: {
-              trigger: block,
-              start: "top 76%",
-              once: true,
-            },
-          });
-
-          blockTimeline.fromTo(
-            [number, title, text],
-            { opacity: 0, y: 26 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 0.9,
-              ease: "power3.out",
-              stagger: 0.1,
-            }
-          );
-
-          blockTimeline.fromTo(
-            media,
-            { opacity: 0, y: 34, clipPath: "inset(10% 0% 10% 0% round 16px)" },
-            {
-              opacity: 1,
-              y: 0,
-              clipPath: "inset(0% 0% 0% 0% round 16px)",
-              duration: 1.05,
-              ease: "power4.out",
-            },
-            "-=0.62"
-          );
-
-          blockTimeline.fromTo(
-            image,
-            { scale: 1.08 },
-            {
-              scale: 1,
-              duration: 1.2,
-              ease: "power3.out",
-            },
-            "<"
-          );
-
-          if (copy) {
-            gsap.to(copy, {
-              yPercent: -3,
-              ease: "none",
-              scrollTrigger: {
-                trigger: block,
-                start: "top bottom",
-                end: "bottom top",
-                scrub: 0.9,
-              },
-            });
-          }
-
-          if (image) {
-            gsap.to(image, {
-              yPercent: -7,
-              ease: "none",
-              scrollTrigger: {
-                trigger: block,
-                start: "top bottom",
-                end: "bottom top",
-                scrub: 1.1,
-              },
-            });
-          }
+        },
       });
     }, section);
 
@@ -186,52 +74,89 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="services" className={styles.section} aria-labelledby="services-heading">
-      <div className={styles.inner}>
-        <div ref={headerRef} className={styles.header}>
-          <p data-services-reveal className={styles.label}>Services</p>
-          <h2 data-services-reveal id="services-heading" className={styles.heading}>
-            Crafted Experiences,
-            <br />
-            Beyond Photography.
-          </h2>
-          <p data-services-reveal className={styles.description}>
-            From first conversation to final delivery, every service is tailored to preserve your celebration with intention, elegance, and timeless craft.
-          </p>
-        </div>
+    <section 
+      ref={sectionRef} 
+      id="services" 
+      className="relative w-full text-zinc-900 overflow-hidden bg-[#FAF8F5]" 
+      aria-labelledby="services-heading"
+    >
+      {/* Background with Stars */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <StarsBackground
+          starColor="#C8A86B"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_#FAF8F5_0%,_#EBE4D5_100%)] opacity-60"
+        />
+      </div>
 
-        <div className={styles.blocks}>
-          {services.map((service, index) => {
-            const isEven = index % 2 === 1;
+      {/* Sticky container that stays pinned while we scroll */}
+      <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row items-center justify-between overflow-hidden">
+        
+        {/* LEFT SIDE - Service Information */}
+        <div className="w-full md:w-1/2 h-[45%] md:h-full flex flex-col justify-end md:justify-center px-6 md:px-16 lg:px-24 z-20 pb-4 md:pb-0 pt-20 md:pt-0">
+          <div className="mb-4 md:mb-12">
+            <p className="text-xs md:text-sm uppercase tracking-[0.2em] text-[#C8A86B] font-semibold mb-2 md:mb-4">Services</p>
+            <h2 id="services-heading" className="text-3xl md:text-5xl lg:text-6xl font-light tracking-tight leading-tight">
+              Crafted Experiences,<br />
+              <span className="font-serif italic text-zinc-500">Beyond Photography.</span>
+            </h2>
+          </div>
 
-            return (
-              <article
-                key={service.number}
-                ref={(element) => {
-                  blockRefs.current[index] = element;
-                }}
-                className={`${styles.block} ${isEven ? styles.blockReverse : ""}`}
+          {/* Animated Text Block that changes based on activeIndex */}
+          <div className="relative h-40 md:h-48 mt-2 md:mt-8">
+            {services.map((service, index) => (
+              <div 
+                key={service.badge}
+                className={`absolute top-0 left-0 w-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  activeIndex === index 
+                    ? "opacity-100 translate-y-0 pointer-events-auto" 
+                    : "opacity-0 translate-y-12 pointer-events-none"
+                }`}
               >
-                <div className={styles.copy} data-service-copy>
-                  <p className={styles.number} data-service-number>{service.number}</p>
-                  <h3 className={styles.serviceTitle} data-service-title>{service.title}</h3>
-                  <p className={styles.serviceText} data-service-text>{service.description}</p>
+                <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-4">
+                  <span className="text-xl md:text-3xl font-light text-[#C8A86B]">{service.badge}</span>
+                  <h3 className="text-lg md:text-2xl font-medium">{service.title}</h3>
                 </div>
-
-                <div className={styles.media} data-service-media>
-                  <Image
-                    src={service.imageSrc}
-                    alt={service.imageAlt}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 52vw, 48vw"
-                    className={styles.image}
-                    data-service-image
-                  />
-                </div>
-              </article>
-            );
-          })}
+                <p className="text-zinc-600 leading-relaxed text-sm md:text-lg max-w-md">
+                  {service.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* RIGHT SIDE - 3D Bend Carousel */}
+        <div className="w-full md:w-1/2 h-[55%] md:h-full flex items-center justify-center relative">
+          
+          <ThreeDBendCarousel
+            ref={carouselRef}
+            items={services}
+            orientation="vertical"
+            curveDirection="concave"
+            grayscaleInactive={true}
+            itemWidth={340}
+            aspectRatio={0.75}
+            gap={-35}
+            perspective={1200}
+            bendAngle={45}
+            depth={400}
+            snap={true}
+            loop={false}
+            autoPlay={false}
+            enableWheel={false}  // Let the page handle scrolling
+            enableDrag={false}   // Prevent dragging so it strictly follows page scroll
+            showControls={false} // Clean UI without arrows
+            showIndicators={false} // Clean UI without dots
+            onActiveChange={setActiveIndex}
+            className="w-full h-[150%] md:h-[120vh]" // Make it taller to allow bending out of view
+            cardClassName="scale-90 md:scale-100" // Scale down cards slightly on mobile
+          />
+
+          {/* Foreground blend gradient to soften edges of the carousel */}
+          <div className="absolute inset-y-0 right-0 w-24 md:w-32 bg-gradient-to-l from-[#FAF8F5] to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 left-0 w-24 md:w-32 bg-gradient-to-r from-[#FAF8F5] to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#FAF8F5] to-transparent pointer-events-none z-10 md:hidden" />
+        </div>
+
       </div>
     </section>
   );

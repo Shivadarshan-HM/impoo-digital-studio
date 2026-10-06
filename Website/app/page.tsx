@@ -204,6 +204,10 @@ const jsonLd = {
   ],
 };
 
+import TwistingRibbon from "@/components/lightswind/twisting-ribbon";
+import { ScrollRevealText } from "@/components/animate-ui/components/ScrollRevealText";
+import { PageTransition } from "@/components/animate-ui/components/PageTransition";
+
 export default function Home() {
   return (
     <>
@@ -223,6 +227,41 @@ export default function Home() {
         <main>
           <HeroSection />
           <AboutSection />
+          
+          {/* Aesthetic Transition Ribbon Section */}
+          <section className="relative w-full h-[40vh] md:h-[50vh] bg-[#FAF8F5] overflow-hidden flex items-center justify-center">
+            <div className="absolute inset-0 z-0">
+              <TwistingRibbon
+                segments={400}
+                waveSpeed={0.015}
+                waveAmplitude={1.2}
+                twistCycles={5}
+                lightColors={{
+                  face: "#C8A86B",
+                  foldA: "#E5C88B",
+                  foldB: "#A58548",
+                  foldC: "#D4B478"
+                }}
+                darkColors={{
+                  face: "#C8A86B",
+                  foldA: "#E5C88B",
+                  foldB: "#A58548",
+                  foldC: "#D4B478"
+                }}
+                className="opacity-40 mix-blend-multiply"
+              />
+            </div>
+            
+            <div className="relative z-10 text-center px-6 flex flex-col items-center">
+              <ScrollRevealText type="crazy" as="h3" className="text-3xl md:text-5xl font-light text-zinc-900 tracking-tight leading-tight mb-4 justify-center">
+                Weaving stories through time
+              </ScrollRevealText>
+              <ScrollRevealText type="words" delay={0.3} as="p" className="text-zinc-600 font-serif italic text-lg md:text-xl max-w-xl mx-auto justify-center">
+                Every thread of your celebration, beautifully captured.
+              </ScrollRevealText>
+            </div>
+          </section>
+
           <PortfolioSection />
           <ServicesSection />
           <ContactSection />

@@ -107,6 +107,7 @@ export default function FrameAnimationBackground({
   }, []);
 
   // Animation Loop (Cinematic Ken Burns for single frame, multi-frame sequence if multiple)
+  // Animation Loop (Scroll-based animation for multiple frames, Ken Burns for single frame)
   useEffect(() => {
     if (!imagesLoaded || loadedImagesRef.current.length === 0) return;
 
@@ -118,10 +119,8 @@ export default function FrameAnimationBackground({
 
     const images = loadedImagesRef.current;
     const totalFrames = images.length;
-    const frameDuration = 1000 / fps;
 
-    let currentFrame = 0;
-    let lastFrameTime = performance.now();
+    let currentFrameVal = 0; // Use a float for smooth interpolation
     const startTime = performance.now();
     let isTabVisible = !document.hidden;
 
@@ -168,7 +167,8 @@ export default function FrameAnimationBackground({
       if (!canvas) return;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      const img = images[currentFrame] || images[0];
+      const imgIndex = Math.floor(currentFrameVal) % totalFrames;
+      const img = images[imgIndex] || images[0];
       if (img) {
         drawFrame(img);
       }
@@ -185,14 +185,22 @@ export default function FrameAnimationBackground({
     const animateLoop = (now: number) => {
       if (isTabVisible) {
         if (totalFrames > 1) {
-          // Multi-frame sequential playback
-          const delta = now - lastFrameTime;
-          if (delta >= frameDuration) {
-            const framesToAdvance = Math.floor(delta / frameDuration);
-            currentFrame = (currentFrame + framesToAdvance) % totalFrames;
-            lastFrameTime = now - (delta % frameDuration);
+          // Scroll-based animation
+          // We'll complete the animation over a 300vh scroll distance
+          const animationScrollDistance = window.innerHeight * 3;
+
+          let targetFrame = 0;
+          if (animationScrollDistance > 0) {
+            const scrollFraction = Math.min(1, Math.max(0, window.scrollY / animationScrollDistance));
+            // Map scroll fraction to [0, totalFrames - 1]
+            targetFrame = scrollFraction * (totalFrames - 1);
           }
-          const img = images[currentFrame];
+
+          // Smoothly interpolate current frame towards target frame
+          currentFrameVal += (targetFrame - currentFrameVal) * 0.1;
+
+          const imgIndex = Math.floor(currentFrameVal);
+          const img = images[imgIndex];
           if (img) {
             drawFrame(img);
           }

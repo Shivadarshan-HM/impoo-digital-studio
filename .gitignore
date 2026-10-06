@@ -37,3 +37,6 @@ ENV/
 Thumbs.db
 .vscode/
 .idea/
+
+# Large extracted video frames
+frames/

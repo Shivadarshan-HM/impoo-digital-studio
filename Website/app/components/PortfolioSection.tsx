@@ -1,6 +1,9 @@
 import PortfolioCategoryCard from "./PortfolioCategoryCard";
 import styles from "./PortfolioSection.module.css";
 import { getPublishedCategories, type PublicCategory } from "@/lib/api";
+import CoolSlideGallery from "@/components/lightswind/cool-slide-gallery";
+import WaveGridBackground from "@/components/lightswind/wave-grid-background";
+import { ScrollRevealText } from "@/components/animate-ui/components/ScrollRevealText";
 
 interface CategoryDef {
   name: string;
@@ -67,109 +70,74 @@ export default async function PortfolioSection() {
   // Combine definitions with API data or fallback
   const categoriesData = DEFAULT_DEFS.map((def) => {
     const apiData = categoryMap.get(def.slug);
+    
+    // Specifically override Haldi cover image as requested
+    let coverImage = apiData?.cover_image_url || def.fallbackCover;
+    if (def.slug === "haldi" && !apiData?.cover_image_url) {
+      coverImage = "/images/Haldi/WhatsApp%20Image%202026-07-19%20at%207.44.16%20PM.jpeg";
+    }
+
     return {
       ...def,
       name: apiData?.name || def.name,
       photoCount: apiData?.photo_count ?? 0,
-      coverImage: apiData?.cover_image_url || def.fallbackCover,
+      coverImage: coverImage,
     };
   });
 
-  const weddingCard = categoriesData.find((c) => c.slug === "wedding");
-  const haldiCard = categoriesData.find((c) => c.slug === "haldi");
-  const receptionCard = categoriesData.find((c) => c.slug === "reception");
-  const babyShootCard = categoriesData.find((c) => c.slug === "baby-shoot");
-  const awardsCard = categoriesData.find((c) => c.slug === "awards-recognition");
+  const gallerySlides = categoriesData.map(c => ({
+    src: c.coverImage,
+    title: c.name,
+    subtitle: `${c.photoCount} Photos`,
+    badge: c.isHero ? "Featured" : (c.isBabyShoot ? "Popular" : undefined),
+    href: `/portfolio/${c.slug}`
+  }));
 
   return (
     <section
       id="portfolio"
-      className={styles.section}
+      className={`${styles.section} relative overflow-hidden`}
       aria-labelledby="portfolio-heading"
     >
-      <div className={styles.inner}>
+      {/* Wave Grid Background */}
+      <div className="absolute inset-0 z-0">
+        <WaveGridBackground 
+          colorBase="#ffffff" 
+          colorHigh="#C8A86B" 
+          autoAnimate={true}
+        />
+      </div>
+
+      <div className={`${styles.inner} relative z-10`}>
         {/* Section Header */}
         <div className={styles.header}>
-          <p className={styles.label}>Selected Portfolio</p>
-          <h2 id="portfolio-heading" className={styles.heading}>
+          <ScrollRevealText as="p" className={styles.label}>
+            Selected Portfolio
+          </ScrollRevealText>
+          <ScrollRevealText as="h2" id="portfolio-heading" className={styles.heading} type="words">
             Cinematic Stories. Timeless Moments.
-          </h2>
-          <p className={styles.description}>
+          </ScrollRevealText>
+          <ScrollRevealText as="p" className={styles.description} delay={0.2} type="words">
             Explore our curated portfolio of weddings, celebrations, intimate portraiture, and award-winning recognition.
-          </p>
+          </ScrollRevealText>
         </div>
 
-        {/* 5-Category Editorial Portfolio Grid */}
-        <div className={styles.portfolioGrid}>
-          {/* Desktop Left Column (1.7fr): Hero Wedding Card */}
-          {weddingCard && (
-            <div className={styles.leftCol}>
-              <PortfolioCategoryCard
-                name={weddingCard.name}
-                photoCount={weddingCard.photoCount}
-                slug={weddingCard.slug}
-                coverImage={weddingCard.coverImage}
-                priority={weddingCard.priority}
-                aspectRatio={weddingCard.aspectRatio}
-                isHero={weddingCard.isHero}
-              />
-            </div>
-          )}
-
-          {/* Desktop Right Column (2x2 Grid): Haldi, Reception, Baby Shoot, Awards & Recognition */}
-          <div className={styles.rightGrid}>
-            {haldiCard && (
-              <div className={styles.haldiItem}>
-                <PortfolioCategoryCard
-                  name={haldiCard.name}
-                  photoCount={haldiCard.photoCount}
-                  slug={haldiCard.slug}
-                  coverImage={haldiCard.coverImage}
-                  priority={haldiCard.priority}
-                  aspectRatio={haldiCard.aspectRatio}
-                />
-              </div>
-            )}
-
-            {receptionCard && (
-              <div className={styles.receptionItem}>
-                <PortfolioCategoryCard
-                  name={receptionCard.name}
-                  photoCount={receptionCard.photoCount}
-                  slug={receptionCard.slug}
-                  coverImage={receptionCard.coverImage}
-                  priority={receptionCard.priority}
-                  aspectRatio={receptionCard.aspectRatio}
-                />
-              </div>
-            )}
-
-            {babyShootCard && (
-              <div className={styles.babyShootItem}>
-                <PortfolioCategoryCard
-                  name={babyShootCard.name}
-                  photoCount={babyShootCard.photoCount}
-                  slug={babyShootCard.slug}
-                  coverImage={babyShootCard.coverImage}
-                  priority={babyShootCard.priority}
-                  aspectRatio={babyShootCard.aspectRatio}
-                  isBabyShoot={babyShootCard.isBabyShoot}
-                />
-              </div>
-            )}
-
-            {awardsCard && (
-              <div className={styles.awardsItem}>
-                <PortfolioCategoryCard
-                  name={awardsCard.name}
-                  photoCount={awardsCard.photoCount}
-                  slug={awardsCard.slug}
-                  coverImage={awardsCard.coverImage}
-                  priority={awardsCard.priority}
-                  aspectRatio={awardsCard.aspectRatio}
-                />
-              </div>
-            )}
+        {/* Cool Slide Gallery replacing the Grid */}
+        <div className="w-full h-[600px] mt-12 flex items-center justify-center rounded-2xl overflow-hidden relative">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] border border-white/5 rounded-2xl z-0" />
+          <div className="relative z-10 w-full h-full pt-6">
+            <CoolSlideGallery
+              slides={gallerySlides}
+              cardWidth={360}
+              cardHeight={440}
+              showTitle
+              showArrows
+              showDots
+              draggable
+              clickable
+              autoplay={false}
+              easing="smooth"
+            />
           </div>
         </div>
       </div>

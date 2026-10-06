@@ -5,45 +5,9 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const rootDir = process.cwd();
-    let sourceDir = path.join(rootDir, "frames");
-    if (!fs.existsSync(sourceDir)) {
-      const parentSourceDir = path.join(rootDir, "..", "frames");
-      if (fs.existsSync(parentSourceDir)) {
-        sourceDir = parentSourceDir;
-      }
-    }
+    const targetDir = path.join(rootDir, "public", "selected_video_frames_24fps_png");
 
-    const targetDir = path.join(rootDir, "public", "frames");
-
-    // Ensure public/frames directory exists
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-
-    // Sync files from root /frames into public/frames if sourceDir exists
-    if (fs.existsSync(sourceDir)) {
-      const sourceFiles = fs.readdirSync(sourceDir).filter((f) =>
-        /\.(jpe?g|png|webp)$/i.test(f)
-      );
-
-      sourceFiles.forEach((file) => {
-        const srcPath = path.join(sourceDir, file);
-        const destPath = path.join(targetDir, file);
-        if (!fs.existsSync(destPath)) {
-          try {
-            fs.copyFileSync(srcPath, destPath);
-          } catch {}
-        }
-      });
-    }
-
-    // Prioritize active hero frame image if present
-    const heroImage = "hero-wedding-sunset.jpg";
-    if (fs.existsSync(path.join(targetDir, heroImage))) {
-      return NextResponse.json({ frames: [`/frames/${heroImage}`] });
-    }
-
-    // Read all frame files from public/frames
+    // Read all frame files from public/selected_video_frames_24fps_png
     let frameFiles: string[] = [];
     if (fs.existsSync(targetDir)) {
       frameFiles = fs
@@ -51,14 +15,28 @@ export async function GET() {
         .filter((f) => /\.(jpe?g|png|webp)$/i.test(f));
     }
 
-    // Sort numerically (e.g. ezgif-frame-001.jpg, ezgif-frame-002.jpg...)
+    // Sort numerically (e.g. frame_0001.png, frame_0002.png...)
     frameFiles.sort((a, b) => {
       const numA = parseInt(a.replace(/\D/g, ""), 10) || 0;
       const numB = parseInt(b.replace(/\D/g, ""), 10) || 0;
       return numA - numB;
     });
 
-    const framePaths = frameFiles.map((f) => `/frames/${f}`);
+    let framePaths = frameFiles.map((f) => `/selected_video_frames_24fps_png/${f}`);
+
+    // Fallback if no frames found
+    if (framePaths.length === 0) {
+      const fallbackDir = path.join(rootDir, "public", "frames");
+      if (fs.existsSync(fallbackDir)) {
+        const fallbackFiles = fs.readdirSync(fallbackDir).filter((f) => /\.(jpe?g|png|webp)$/i.test(f));
+        fallbackFiles.sort((a, b) => {
+          const numA = parseInt(a.replace(/\D/g, ""), 10) || 0;
+          const numB = parseInt(b.replace(/\D/g, ""), 10) || 0;
+          return numA - numB;
+        });
+        framePaths = fallbackFiles.map((f) => `/frames/${f}`);
+      }
+    }
 
     return NextResponse.json({ frames: framePaths });
   } catch (error) {
