@@ -1,241 +1,435 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 
-const DEFAULT_FRAME_PATHS = [
-  "/frames/hero-wedding-sunset.jpg",
-  "/frames/ezgif-frame-001.jpg",
-];
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+const TOTAL_FRAMES = 240;
+const FRAME_PATH_PREFIX = "/frames-webp/frame_";
+const FRAME_EXT = ".webp";
 
+const BACKGROUND_CONCURRENCY = 8;
+const SCROLL_DISTANCE_VH = 3; // animation completes over 3× viewport height
+
+/**
+ * Generates a zero-padded frame path: /frames-webp/frame_0001.webp … frame_0240.webp
+ */
+function framePath(index: number): string {
+  const num = String(index + 1).padStart(4, "0");
+  return `${FRAME_PATH_PREFIX}${num}${FRAME_EXT}`;
+}
+
+// ---------------------------------------------------------------------------
+// Image loader with createImageBitmap pre-decode & responsive resize
+// ---------------------------------------------------------------------------
+function loadAndDecode(
+  src: string,
+  resizeWidth: number
+): Promise<ImageBitmap | HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => {
+      if (typeof createImageBitmap === "function") {
+        createImageBitmap(img, {
+          resizeWidth,
+          resizeQuality: "medium",
+        })
+          .then(resolve)
+          .catch(() => {
+            // Fallback without resize options if browser engine does not support ImageBitmapOptions
+            createImageBitmap(img).then(resolve).catch(reject);
+          });
+      } else {
+        // Fallback: decode() on HTMLImageElement
+        img
+          .decode()
+          .then(() => resolve(img))
+          .catch(() => resolve(img));
+      }
+    };
+    img.onerror = () => reject(new Error(`Failed to load frame: ${src}`));
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 export default function FrameAnimationBackground({
-  fps = 24,
   className = "",
 }: {
   fps?: number;
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  const loadedImagesRef = useRef<HTMLImageElement[]>([]);
-  const animFrameIdRef = useRef<number | null>(null);
+  const framesRef = useRef<(ImageBitmap | HTMLImageElement | null)[]>(
+    new Array(TOTAL_FRAMES).fill(null)
+  );
+  const lastDrawnIndexRef = useRef<number>(-1);
+  const scrollProgressRef = useRef<number>(0);
+  const targetIndexRef = useRef<number>(0);
+  const rafIdRef = useRef<number | null>(null);
+  const posterReadyRef = useRef<boolean>(false);
+  const mountedRef = useRef(true);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadFrames = async () => {
-      let framePaths = DEFAULT_FRAME_PATHS.slice(0, 1);
-      try {
-        const res = await fetch("/api/frames");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.frames && data.frames.length > 0) {
-            framePaths = data.frames;
-          }
-        }
-      } catch {
-        // Fallback to DEFAULT_FRAME_PATHS
-      }
-
-      // De-duplicate in case of duplicate entries
-      const uniquePaths = Array.from(new Set(framePaths));
-      const loadedImgs: HTMLImageElement[] = new Array(uniquePaths.length);
-      let loadedCount = 0;
-
-      uniquePaths.forEach((path, idx) => {
-        const img = new Image();
-        img.src = path;
-        img.onload = () => {
-          if (!isMounted) return;
-          loadedImgs[idx] = img;
-          loadedCount++;
-          if (loadedCount === uniquePaths.length) {
-            loadedImagesRef.current = loadedImgs.filter(
-              (img): img is HTMLImageElement =>
-                Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
-            );
-            setImagesLoaded(loadedImagesRef.current.length > 0);
-          }
-        };
-        img.onerror = () => {
-          if (!isMounted) return;
-          // If first path failed, try fallback
-          if (path !== DEFAULT_FRAME_PATHS[1]) {
-            const fallbackImg = new Image();
-            fallbackImg.src = DEFAULT_FRAME_PATHS[1];
-            fallbackImg.onload = () => {
-              if (!isMounted) return;
-              loadedImgs[idx] = fallbackImg;
-              loadedCount++;
-              if (loadedCount === uniquePaths.length) {
-                loadedImagesRef.current = loadedImgs.filter(
-                  (img): img is HTMLImageElement =>
-                    Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
-                );
-                setImagesLoaded(loadedImagesRef.current.length > 0);
-              }
-            };
-            fallbackImg.onerror = () => {
-              if (!isMounted) return;
-              loadedCount++;
-              if (loadedCount === uniquePaths.length) {
-                loadedImagesRef.current = loadedImgs.filter(
-                  (img): img is HTMLImageElement =>
-                    Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
-                );
-                setImagesLoaded(loadedImagesRef.current.length > 0);
-              }
-            };
-          } else {
-            loadedCount++;
-            if (loadedCount === uniquePaths.length) {
-              loadedImagesRef.current = loadedImgs.filter(
-                (img): img is HTMLImageElement =>
-                  Boolean(img && img.complete && (img.naturalWidth > 0 || img.width > 0))
-              );
-              setImagesLoaded(loadedImagesRef.current.length > 0);
-            }
-          }
-        };
-      });
-    };
-
-    loadFrames();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Animation Loop (Cinematic Ken Burns for single frame, multi-frame sequence if multiple)
-  // Animation Loop (Scroll-based animation for multiple frames, Ken Burns for single frame)
-  useEffect(() => {
-    if (!imagesLoaded || loadedImagesRef.current.length === 0) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const images = loadedImagesRef.current;
-    const totalFrames = images.length;
-
-    let currentFrameVal = 0; // Use a float for smooth interpolation
-    const startTime = performance.now();
-    let isTabVisible = !document.hidden;
-
-    const drawFrame = (
-      img: HTMLImageElement,
-      scale = 1.0,
-      panX = 0,
-      panY = 0
-    ) => {
-      if (!canvas || !ctx || !img || !img.complete) return;
-      const iw = img.naturalWidth || img.width;
-      const ih = img.naturalHeight || img.height;
-      if (!iw || !ih) return;
+  // -----------------------------------------------------------------------
+  // Draw a single frame onto the canvas (cover-fit)
+  // -----------------------------------------------------------------------
+  const drawFrame = useCallback(
+    (bitmap: ImageBitmap | HTMLImageElement) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
       const cw = canvas.width;
       const ch = canvas.height;
       if (!cw || !ch) return;
 
-      // Cover scaling calculation (object-fit: cover equivalent)
+      const iw =
+        "naturalWidth" in bitmap
+          ? (bitmap as HTMLImageElement).naturalWidth || bitmap.width
+          : bitmap.width;
+      const ih =
+        "naturalHeight" in bitmap
+          ? (bitmap as HTMLImageElement).naturalHeight || bitmap.height
+          : bitmap.height;
+      if (!iw || !ih) return;
+
+      // Cover-fit calculation
       const canvasRatio = cw / ch;
       const imgRatio = iw / ih;
-
-      let baseW = cw;
-      let baseH = ch;
+      let drawW: number;
+      let drawH: number;
 
       if (canvasRatio > imgRatio) {
-        baseW = cw;
-        baseH = cw / imgRatio;
+        drawW = cw;
+        drawH = cw / imgRatio;
       } else {
-        baseH = ch;
-        baseW = ch * imgRatio;
+        drawH = ch;
+        drawW = ch * imgRatio;
       }
 
-      const drawW = baseW * scale;
-      const drawH = baseH * scale;
-      const offsetX = (cw - drawW) / 2 + panX;
-      const offsetY = (ch - drawH) / 2 + panY;
+      const offsetX = (cw - drawW) / 2;
+      const offsetY = (ch - drawH) / 2;
 
       ctx.clearRect(0, 0, cw, ch);
-      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-    };
+      ctx.drawImage(bitmap, offsetX, offsetY, drawW, drawH);
+    },
+    []
+  );
 
-    const handleResize = () => {
-      if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      const imgIndex = Math.floor(currentFrameVal) % totalFrames;
-      const img = images[imgIndex] || images[0];
-      if (img) {
-        drawFrame(img);
+  // -----------------------------------------------------------------------
+  // Find nearest loaded frame to the requested target index
+  // -----------------------------------------------------------------------
+  const findNearestLoadedFrame = useCallback(
+    (targetIndex: number): number => {
+      const frames = framesRef.current;
+      if (frames[targetIndex]) return targetIndex;
+
+      // Search outward from target
+      for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
+        const before = targetIndex - offset;
+        const after = targetIndex + offset;
+        if (before >= 0 && frames[before]) return before;
+        if (after < TOTAL_FRAMES && frames[after]) return after;
       }
-    };
+      return -1;
+    },
+    []
+  );
+
+  // -----------------------------------------------------------------------
+  // Canvas resize handler (caps DPR at 2)
+  // -----------------------------------------------------------------------
+  const handleResize = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    // Force redraw on next opportunity
+    lastDrawnIndexRef.current = -1;
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // Main effect: responsive loading pipeline, dynamic priority & idle rAF
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    mountedRef.current = true;
+    const abortController = new AbortController();
+
+    // Responsive setup: screens < 768px load every 2nd frame at 640px wide
+    const isMobile = window.innerWidth < 768;
+    const resizeWidth = isMobile ? 640 : 1280;
+    const frameStep = isMobile ? 2 : 1;
+
+    const activeIndices: number[] = [];
+    for (let i = 0; i < TOTAL_FRAMES; i += frameStep) {
+      activeIndices.push(i);
+    }
+
+    const priorityBatchCount = Math.min(isMobile ? 8 : 12, activeIndices.length);
 
     handleResize();
     window.addEventListener("resize", handleResize);
 
-    const handleVisibilityChange = () => {
-      isTabVisible = !document.hidden;
+    // Track loading progress and in-flight fetches
+    const loadedSet = new Set<number>();
+    const inFlightSet = new Set<number>();
+
+    // Callback when a frame completes loading
+    const onFrameReady = (
+      index: number,
+      bitmap: ImageBitmap | HTMLImageElement
+    ) => {
+      if (!mountedRef.current) return;
+      framesRef.current[index] = bitmap;
+
+      // Draw initial poster as soon as frame 0 lands
+      if (index === 0 && !posterReadyRef.current) {
+        posterReadyRef.current = true;
+        drawFrame(bitmap);
+        lastDrawnIndexRef.current = 0;
+      } else if (rafIdRef.current === null) {
+        // If rAF is idle, check if this new frame is the best match for current scroll position
+        const currentTarget = targetIndexRef.current;
+        const bestIndex = findNearestLoadedFrame(currentTarget);
+        if (bestIndex === index && index !== lastDrawnIndexRef.current) {
+          drawFrame(bitmap);
+          lastDrawnIndexRef.current = index;
+        }
+      }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    const animateLoop = (now: number) => {
-      if (isTabVisible) {
-        if (totalFrames > 1) {
-          // Scroll-based animation
-          // We'll complete the animation over a 300vh scroll distance
-          const animationScrollDistance = window.innerHeight * 3;
+    // -------------------------------------------------------------------
+    // Dynamic Priority Queue: loads remaining frames ordered by distance
+    // from targetIndexRef.current, re-sorting as the user scrolls
+    // -------------------------------------------------------------------
+    const pumpQueue = () => {
+      if (abortController.signal.aborted || !mountedRef.current) return;
 
-          let targetFrame = 0;
-          if (animationScrollDistance > 0) {
-            const scrollFraction = Math.min(1, Math.max(0, window.scrollY / animationScrollDistance));
-            // Map scroll fraction to [0, totalFrames - 1]
-            targetFrame = scrollFraction * (totalFrames - 1);
+      while (inFlightSet.size < BACKGROUND_CONCURRENCY) {
+        const candidates: number[] = [];
+        for (let k = 0; k < activeIndices.length; k++) {
+          const idx = activeIndices[k];
+          if (!loadedSet.has(idx) && !inFlightSet.has(idx)) {
+            candidates.push(idx);
           }
+        }
 
-          // Smoothly interpolate current frame towards target frame
-          currentFrameVal += (targetFrame - currentFrameVal) * 0.1;
+        if (candidates.length === 0) break;
 
-          const imgIndex = Math.floor(currentFrameVal);
-          const img = images[imgIndex];
-          if (img) {
-            drawFrame(img);
+        const currentTarget = targetIndexRef.current;
+        candidates.sort((a, b) => {
+          const distA = Math.abs(a - currentTarget);
+          const distB = Math.abs(b - currentTarget);
+          if (distA !== distB) return distA - distB;
+          return a >= currentTarget ? -1 : 1;
+        });
+
+        const nextIndex = candidates[0];
+        inFlightSet.add(nextIndex);
+
+        loadAndDecode(framePath(nextIndex), resizeWidth)
+          .then((bitmap) => {
+            if (abortController.signal.aborted || !mountedRef.current) {
+              if (
+                bitmap &&
+                "close" in bitmap &&
+                typeof (bitmap as ImageBitmap).close === "function"
+              ) {
+                try {
+                  (bitmap as ImageBitmap).close();
+                } catch {
+                  /* noop */
+                }
+              }
+              return;
+            }
+            inFlightSet.delete(nextIndex);
+            loadedSet.add(nextIndex);
+            onFrameReady(nextIndex, bitmap);
+            pumpQueue();
+          })
+          .catch(() => {
+            inFlightSet.delete(nextIndex);
+            loadedSet.add(nextIndex); // Avoid infinite retries on error
+            pumpQueue();
+          });
+      }
+    };
+
+    // -------------------------------------------------------------------
+    // Animation loop: stops when |target - current| < 0.01
+    // -------------------------------------------------------------------
+    let currentFrameFloat = 0;
+
+    const tick = () => {
+      if (!mountedRef.current) return;
+
+      const targetStep =
+        scrollProgressRef.current * (activeIndices.length - 1);
+      const diff = targetStep - currentFrameFloat;
+
+      // Stop rAF loop when settled within 0.01 of target
+      if (Math.abs(diff) < 0.01) {
+        currentFrameFloat = targetStep;
+        const finalStep = Math.min(
+          Math.max(0, Math.round(currentFrameFloat)),
+          activeIndices.length - 1
+        );
+        const finalIndex = activeIndices[finalStep];
+
+        if (finalIndex !== lastDrawnIndexRef.current) {
+          const bestIndex = findNearestLoadedFrame(finalIndex);
+          if (bestIndex >= 0) {
+            const bmp = framesRef.current[bestIndex];
+            if (bmp) {
+              drawFrame(bmp);
+              lastDrawnIndexRef.current = bestIndex;
+            }
           }
-        } else {
-          // Single frame: subtle cinematic Ken Burns breathe effect
-          const elapsed = (now - startTime) * 0.001; // elapsed in seconds
-          const scale =
-            1.0 + 0.04 * (0.5 + 0.5 * Math.sin((elapsed * Math.PI * 2) / 16));
-          const panX = Math.sin((elapsed * Math.PI * 2) / 22) * 6;
-          const panY = Math.cos((elapsed * Math.PI * 2) / 22) * 3;
+        }
 
-          const img = images[0];
-          if (img) {
-            drawFrame(img, scale, panX, panY);
+        rafIdRef.current = null;
+        return;
+      }
+
+      currentFrameFloat += diff * 0.12;
+      const currentStep = Math.min(
+        Math.max(0, Math.round(currentFrameFloat)),
+        activeIndices.length - 1
+      );
+      const targetIndex = activeIndices[currentStep];
+
+      if (targetIndex !== lastDrawnIndexRef.current) {
+        const bestIndex = findNearestLoadedFrame(targetIndex);
+        if (bestIndex >= 0) {
+          const bmp = framesRef.current[bestIndex];
+          if (bmp) {
+            drawFrame(bmp);
+            lastDrawnIndexRef.current = bestIndex;
           }
         }
       }
 
-      animFrameIdRef.current = requestAnimationFrame(animateLoop);
+      rafIdRef.current = requestAnimationFrame(tick);
     };
 
-    if (images[0]) {
-      drawFrame(images[0]);
-    }
+    // -------------------------------------------------------------------
+    // Scroll handler: updates target, restarts rAF if idle, pumps queue
+    // -------------------------------------------------------------------
+    const handleScroll = () => {
+      const maxScroll = window.innerHeight * SCROLL_DISTANCE_VH;
+      scrollProgressRef.current = Math.min(
+        1,
+        Math.max(0, window.scrollY / maxScroll)
+      );
 
-    animFrameIdRef.current = requestAnimationFrame(animateLoop);
+      const targetStep = Math.min(
+        Math.max(
+          0,
+          Math.round(scrollProgressRef.current * (activeIndices.length - 1))
+        ),
+        activeIndices.length - 1
+      );
+      targetIndexRef.current = activeIndices[targetStep];
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (animFrameIdRef.current) {
-        cancelAnimationFrame(animFrameIdRef.current);
+      // Restart rAF loop if idle
+      if (rafIdRef.current === null && mountedRef.current) {
+        rafIdRef.current = requestAnimationFrame(tick);
+      }
+
+      // Re-sort and dispatch background queue closer to current scroll target
+      pumpQueue();
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initialize scroll position
+
+    // -------------------------------------------------------------------
+    // Pipeline execution:
+    // 1. Priority batch loads first
+    // 2. Start animation loop
+    // 3. Background queue loads remaining frames ordered by scroll distance
+    // -------------------------------------------------------------------
+    (async () => {
+      const initialIndices = activeIndices.slice(0, priorityBatchCount);
+      initialIndices.forEach((idx) => inFlightSet.add(idx));
+
+      await Promise.all(
+        initialIndices.map(async (idx) => {
+          try {
+            const bmp = await loadAndDecode(framePath(idx), resizeWidth);
+            inFlightSet.delete(idx);
+            loadedSet.add(idx);
+            onFrameReady(idx, bmp);
+          } catch {
+            inFlightSet.delete(idx);
+            loadedSet.add(idx);
+          }
+        })
+      );
+
+      if (mountedRef.current) {
+        if (rafIdRef.current === null) {
+          rafIdRef.current = requestAnimationFrame(tick);
+        }
+        // Background loading for all remaining frames
+        pumpQueue();
+      }
+    })();
+
+    // Visibility change handler
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (rafIdRef.current) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+      } else {
+        if (rafIdRef.current === null && mountedRef.current) {
+          rafIdRef.current = requestAnimationFrame(tick);
+        }
       }
     };
-  }, [imagesLoaded, fps]);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    // -------------------------------------------------------------------
+    // Cleanup on unmount:
+    // Call bitmap.close() on all stored ImageBitmaps (skip HTMLImageElement)
+    // -------------------------------------------------------------------
+    return () => {
+      mountedRef.current = false;
+      abortController.abort();
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("visibilitychange", handleVisibility);
+
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+
+      framesRef.current.forEach((bitmap) => {
+        if (
+          bitmap &&
+          "close" in bitmap &&
+          typeof (bitmap as ImageBitmap).close === "function"
+        ) {
+          try {
+            (bitmap as ImageBitmap).close();
+          } catch {
+            /* noop */
+          }
+        }
+      });
+      framesRef.current = new Array(TOTAL_FRAMES).fill(null);
+    };
+  }, [drawFrame, findNearestLoadedFrame, handleResize]);
 
   return (
     <div
