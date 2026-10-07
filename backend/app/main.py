@@ -146,16 +146,14 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 
 # Health Check Endpoints
+@app.get("/", tags=["Health"])
+def root():
+    return {"status": "ok", "service": "IMPOO Digital Studio API"}
+
+
 @app.get("/health", tags=["Health"])
-@app.get(f"{settings.API_V1_STR}/health", tags=["Health"])
-def health_check():
-    return {
-        "status": "ok",
-        "app": settings.PROJECT_NAME,
-        "version": "1.0.0",
-        "environment": settings.ENVIRONMENT,
-        "cors_origins": settings.cors_origins,
-    }
+def health():
+    return {"status": "healthy"}
 
 
 # Register API Routers under /api/v1
