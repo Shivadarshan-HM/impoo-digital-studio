@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ export function ScrollRevealText({
     },
   };
 
-  const childVariants = {
+  const childVariants: Variants = {
     hidden: { 
       opacity: 0, 
       y: type === "crazy" ? 50 : "120%", 
@@ -43,7 +43,7 @@ export function ScrollRevealText({
       rotateX: 0, 
       rotate: 0,
       filter: "blur(0px)",
-      transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } 
+      transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] as const } 
     },
   };
 
